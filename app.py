@@ -59,9 +59,13 @@ def receber_mensagem():
         numero_cliente = mensagem["from"]
         texto_recebido = mensagem.get("text", {}).get("body", "")
 
+        print(f"[LOG] Mensagem recebida de {numero_cliente}: {texto_recebido}")
+
         if texto_recebido:
             resposta = gerar_resposta_ia(numero_cliente, texto_recebido)
-            enviar_mensagem_whatsapp(numero_cliente, resposta)
+            print(f"[LOG] Resposta gerada pela IA: {resposta}")
+            resultado_envio = enviar_mensagem_whatsapp(numero_cliente, resposta)
+            print(f"[LOG] Resultado do envio: {resultado_envio}")
 
     except (KeyError, IndexError) as e:
         print("Aviso: payload sem mensagem processável:", e)
@@ -96,8 +100,7 @@ def enviar_mensagem_whatsapp(numero_destino, texto):
         "text": {"body": texto},
     }
     resp = requests.post(url, headers=headers, json=payload)
-    if resp.status_code != 200:
-        print("Erro ao enviar mensagem:", resp.status_code, resp.text)
+    print(f"[LOG] Status do envio: {resp.status_code} | Resposta: {resp.text}")
     return resp.json()
 
 
