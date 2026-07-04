@@ -51,6 +51,9 @@ def receber_mensagem():
         changes = entry["changes"][0]
         value = changes["value"]
 
+        if "statuses" in value:
+            print(f"[LOG] Status de entrega recebido: {value['statuses']}")
+
         if "messages" not in value:
             # Pode ser um evento de status (mensagem lida, entregue, etc.)
             return jsonify({"status": "ok"}), 200
