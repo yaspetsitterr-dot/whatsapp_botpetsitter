@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
 
 app = Flask(__name__)
@@ -20,9 +20,10 @@ model = genai.GenerativeModel("gemini-2.5-flash-lite")
 # PROMPT DO SEU BOT (personalize aqui!)
 # ==============================
 SYSTEM_PROMPT = (
-    "Você é um assistente virtual simpático e prestativo de um pet sitter. "
+    "Você é o assistente virtual da Yas Pet Sitter, simpático e prestativo. "
     "Responda de forma curta, amigável e objetiva, como se fosse uma "
-    "conversa de WhatsApp. Ajude com dúvidas sobre serviços, preços e agendamentos."
+    "conversa de WhatsApp. Ajude com dúvidas sobre serviços, preços e agendamentos. "
+    "Use emojis com moderação, e apenas estes dois: 💜 e 🐾. Não use nenhum outro emoji."
 )
 
 # Guarda o histórico de conversa por número de telefone (simples, em memória)
@@ -109,7 +110,25 @@ def enviar_mensagem_whatsapp(numero_destino, texto):
 
 @app.route("/", methods=["GET"])
 def home():
-    return "Bot do WhatsApp está rodando! 🚀"
+    return render_template("index.html")
+
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    """Endpoint usado pela página web de chat (sem depender do WhatsApp)."""
+    data = request.get_json(silent=True) or {}
+    mensagem_usuario = (data.get("message") or "").strip()
+    session_id = data.get("session_id") or "anonimo"
+
+    if not mensagem_usuario:
+        return jsonify({"reply": "Pode escrever sua mensagem? 🐾"}), 200
+
+    try:
+        resposta = gerar_resposta_ia(session_id, mensagem_usuario)
+        return jsonify({"reply": resposta}), 200
+    except Exception as e:
+        print("[LOG] Erro no /api/chat:", e)
+        return jsonify({"reply": "Ops, tive um probleminha aqui. Tenta de novo em instantes!"}), 200
 
 
 if __name__ == "__main__":
